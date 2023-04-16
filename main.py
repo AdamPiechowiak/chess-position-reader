@@ -1,9 +1,9 @@
 from PySide6.QtWidgets import QApplication
-from Window import MainWindow
+from Windows import MainWindow
 
 if __name__ == "__main__":
     if not QApplication.instance():
-        app = QApplication([])
+        app = QApplication()
     else:
         app = QApplication.instance()
     
