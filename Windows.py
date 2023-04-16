@@ -1,9 +1,10 @@
-from PySide6.QtWidgets import QWidget, QPushButton, QTextEdit, QApplication
-from PySide6.QtCore import QPoint, Qt, QRectF
+from PySide6.QtWidgets import QWidget, QPushButton, QTextEdit, QApplication, QLabel
+from PySide6.QtCore import QPoint, Qt, QRectF, QRect
 from PySide6 import QtGui
 from PIL import ImageGrab
 import time
 import tkinter as tk
+from PIL.ImageQt import ImageQt
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -26,16 +27,22 @@ class MainWindow(QWidget):
         self.read_btn.setMinimumWidth(100)
         self.read_btn.move(100,10)
         
+        self.image = QLabel(self)
+        self.image.setFixedWidth(280)
+        self.image.setFixedHeight(280)
+        self.image.move(10,40)
+        
         self.text_box = QTextEdit(self)
         self.text_box.setMaximumHeight(150)
         self.text_box.setMinimumWidth(280)
-        self.text_box.move(10,40)
+        self.text_box.move(10,330)
         
         self.select_btn.clicked.connect(self.select)
         self.read_btn.clicked.connect(self.read)
         
-        self.setFixedSize(300,200)
+        self.setFixedSize(300,40)
         self.setWindowTitle("Window")
+        self.move(100,100)
         
         self.show()
         
@@ -98,28 +105,19 @@ class SnippingWindow(QWidget):
         root = tk.Tk()
         screen_width = root.winfo_screenwidth()
         screen_height = root.winfo_screenheight()
-        print(screen_width)
-        print(screen_height)
-        print(self.width())
-        print(self.height())
-        x1 = min(self.begin.x(), self.end.x())
-        y1 = min(self.begin.y(), self.end.y())
-        x2 = max(self.begin.x(), self.end.x())
-        y2 = max(self.begin.y(), self.end.y())
-        print(x1)
-        print(y1)
-        print(x2)
-        print(y2)
         x1 = int(min(self.begin.x(), self.end.x())*screen_width/self.width())
         y1 = int(min(self.begin.y(), self.end.y())*screen_height/self.height())
         x2 = int(max(self.begin.x(), self.end.x())*screen_width/self.width())
         y2 = int(max(self.begin.y(), self.end.y())*screen_height/self.height())
-        print(x1)
-        print(y1)
-        print(x2)
-        print(y2)
         self.setWindowOpacity(0)
         QApplication.restoreOverrideCursor()
         self.parent.screanshot = ImageGrab.grab(bbox=(x1, y1, x2, y2))
+        
+        qim = ImageQt(self.parent.screanshot.resize((280, 280)))
+        pix = QtGui.QPixmap.fromImage(qim)
+        self.parent.image.setPixmap(pix)
+        
+        self.parent.setFixedSize(300,490)
+        self.parent.move(100,100)
         self.parent.show()
         self.close()
