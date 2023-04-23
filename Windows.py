@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QWidget, QPushButton, QTextEdit, QApplication, QLabel
-from PySide6.QtCore import QPoint, Qt, QRectF, QRect
+from PySide6.QtCore import QPoint, Qt, QRectF
 from PySide6 import QtGui
 from PIL import ImageGrab
 import time
@@ -112,7 +112,8 @@ class SnippingWindow(QWidget):
         self.setWindowOpacity(0)
         QApplication.restoreOverrideCursor()
         self.parent.screanshot = ImageGrab.grab(bbox=(x1, y1, x2, y2))
-        
+        print(self.parent.screanshot.shape)
+        print(self.parent.screanshot.resize((280, 280)).shape)
         qim = ImageQt(self.parent.screanshot.resize((280, 280)))
         pix = QtGui.QPixmap.fromImage(qim)
         self.parent.image.setPixmap(pix)
