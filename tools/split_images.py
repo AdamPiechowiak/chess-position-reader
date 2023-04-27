@@ -15,7 +15,22 @@ def splitImage(input_dir,output_dir,cols,rows):
             for j in range(rows):
                 crop_image = image.crop((i*w1, j*h1, (i+1)*w1, (j+1)*h1))
                 crop_image.save(output_dir+"/"+str(os.path.basename(os.path.splitext(path)[0]))+str(i)+str(j)+".PNG")
-        
+     
+def splitImage(image,cols,rows):
+    
+    width, height = image.size
+    w1 = width/cols
+    h1 = height/rows
+    
+    image_list = []
+    
+    for j in range(cols):
+        image_list.append([])
+        for i in range(rows):
+            crop_image = image.crop((i*w1, j*h1, (i+1)*w1, (j+1)*h1))
+            image_list[j].append(crop_image)
+            
+    return image_list
 
 if __name__ == "__main__":
     splitImage("../data/colors/black/base", "../data/colors/black/crop", 8, 8)

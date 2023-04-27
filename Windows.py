@@ -5,6 +5,7 @@ from PIL import ImageGrab
 import time
 import tkinter as tk
 from PIL.ImageQt import ImageQt
+from tools.split_images import splitImage
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -54,6 +55,7 @@ class MainWindow(QWidget):
         time.sleep(0.2)
         self.snipping_window = SnippingWindow(self)
         
+        
     def saveClicked(self):
         self.screanshot.show()
         self.text_box.setText("save")
@@ -62,6 +64,45 @@ class MainWindow(QWidget):
         self.screanshot.show()
         self.text_box.setText("open")
 
+    def readImage(self):
+        
+        
+        pieces_list = [[0] * 8 for i in range(8)]
+        
+        # split Image
+        image_list = splitImage(self.screanshot, 8, 8)
+        #image_list[7][3].show()
+        
+        pieces_list[7][3]="Q"
+        print(pieces_list)
+        
+        # what is in image
+        
+        #if(ispeice):
+            # what color is piece
+        
+        
+        #set text_box
+        fen = self.encodeToFEN(pieces_list)
+        self.text_box.setText(fen)
+    
+    def encodeToFEN(self, table):
+        text = ""
+        for row in table:    
+            i=0
+            for cell in row:
+                if(cell==0):
+                    i+=1
+                else:
+                    if(i!=0):
+                        text +=str(i)
+                        i=0
+                    text +=str(cell)
+            if(i!=0):
+                text +=str(i)
+            text+="/"
+        text=text[:-1]+" w - - 0 1"
+        return text
 
 class SnippingWindow(QWidget):
     def __init__(self, parent=None):
@@ -127,5 +168,6 @@ class SnippingWindow(QWidget):
         self.parent.setFixedSize(300,490)
         
         self.parent.move(100,100)
+        self.parent.readImage()
         self.parent.show()
         self.close()
