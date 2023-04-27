@@ -10,8 +10,8 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         
-        self.select_btn = QPushButton()
-        self.read_btn = QPushButton()
+        self.new_btn = QPushButton()
+        self.save_btn = QPushButton()
         self.text_box = QTextEdit()
         self.screanshot = None
         self.snipping_window = None
@@ -20,12 +20,14 @@ class MainWindow(QWidget):
         
     def setup(self):
         
-        self.select_btn = QPushButton("Select", self)
-        self.select_btn.move(10,10)
+        self.new_btn = QPushButton("New", self)
+        self.new_btn.move(10,10)
         
-        self.read_btn = QPushButton("Read position", self)
-        self.read_btn.setMinimumWidth(100)
-        self.read_btn.move(100,10)
+        self.save_btn = QPushButton("Save", self)
+        self.save_btn.move(90,10)
+        
+        self.open_btn = QPushButton("Open", self)
+        self.open_btn.move(170,10)
         
         self.image = QLabel(self)
         self.image.setFixedWidth(280)
@@ -37,23 +39,28 @@ class MainWindow(QWidget):
         self.text_box.setMinimumWidth(280)
         self.text_box.move(10,330)
         
-        self.select_btn.clicked.connect(self.select)
-        self.read_btn.clicked.connect(self.read)
+        self.new_btn.clicked.connect(self.newClicked)
+        self.save_btn.clicked.connect(self.saveClicked)
+        self.open_btn.clicked.connect(self.openClicked)
         
         self.setFixedSize(300,40)
-        self.setWindowTitle("Window")
+        self.setWindowTitle("Chess position reader")
         self.move(100,100)
         
         self.show()
         
-    def select(self):
+    def newClicked(self):
         self.hide()
         time.sleep(0.2)
         self.snipping_window = SnippingWindow(self)
         
-    def read(self):
+    def saveClicked(self):
         self.screanshot.show()
-        self.text_box.setText("asdad")
+        self.text_box.setText("save")
+        
+    def openClicked(self):
+        self.screanshot.show()
+        self.text_box.setText("open")
 
 
 class SnippingWindow(QWidget):
@@ -109,16 +116,16 @@ class SnippingWindow(QWidget):
         y1 = int(min(self.begin.y(), self.end.y())*screen_height/self.height())
         x2 = int(max(self.begin.x(), self.end.x())*screen_width/self.width())
         y2 = int(max(self.begin.y(), self.end.y())*screen_height/self.height())
+        
         self.setWindowOpacity(0)
         QApplication.restoreOverrideCursor()
         self.parent.screanshot = ImageGrab.grab(bbox=(x1, y1, x2, y2))
-        print(self.parent.screanshot.shape)
-        print(self.parent.screanshot.resize((280, 280)).shape)
+        
         qim = ImageQt(self.parent.screanshot.resize((280, 280)))
         pix = QtGui.QPixmap.fromImage(qim)
         self.parent.image.setPixmap(pix)
-        
         self.parent.setFixedSize(300,490)
+        
         self.parent.move(100,100)
         self.parent.show()
         self.close()
