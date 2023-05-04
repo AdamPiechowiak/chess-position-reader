@@ -2,7 +2,7 @@ from PIL import Image
 import glob
 import os
 
-def splitImage(input_dir,output_dir,cols,rows):
+def splitImages(input_dir,output_dir,cols,rows):
     path_list =list(glob.glob(input_dir+"/*.png", recursive=True))
     
     for path in path_list:
@@ -33,14 +33,14 @@ def splitImage(image,cols,rows):
     return image_list
 
 if __name__ == "__main__":
-    splitImage("../data/colors/black/base", "../data/colors/black/crop", 8, 8)
-    splitImage("../data/colors/white/base", "../data/colors/white/crop", 8, 8)
+    splitImages("../data/base/colors/black", "../data/crop/colors/black", 8, 8)
+    splitImages("../data/base/colors/white", "../data/crop/colors/white", 8, 8)
     
-    splitImage("../data/chess_pieces/king/base", "../data/chess_pieces/king/crop", 8, 8)
-    splitImage("../data/chess_pieces/knight/base", "../data/chess_pieces/knight/crop", 8, 8)
-    splitImage("../data/chess_pieces/none/base", "../data/chess_pieces/none/crop", 8, 8)
-    splitImage("../data/chess_pieces/pawn/base", "../data/chess_pieces/pawn/crop", 8, 8)
-    splitImage("../data/chess_pieces/queen/base", "../data/chess_pieces/queen/crop", 8, 8)
-    splitImage("../data/chess_pieces/bishop/base", "../data/chess_pieces/bishop/crop", 8, 8)
-    splitImage("../data/chess_pieces/rook/base", "../data/chess_pieces/rook/crop", 8, 8)
+    splitImages("../data/base/chess_pieces/king", "../data/crop/chess_pieces/king", 8, 8)
+    splitImages("../data/base/chess_pieces/knight", "../data/crop/chess_pieces/knight", 8, 8)
+    splitImages("../data/base/chess_pieces/none", "../data/crop/chess_pieces/none", 8, 8)
+    splitImages("../data/base/chess_pieces/pawn", "../data/crop/chess_pieces/pawn", 8, 8)
+    splitImages("../data/base/chess_pieces/queen", "../data/crop/chess_pieces/queen", 8, 8)
+    splitImages("../data/base/chess_pieces/bishop", "../data/crop/chess_pieces/bishop", 8, 8)
+    splitImages("../data/base/chess_pieces/rook", "../data/crop/chess_pieces/rook", 8, 8)
         
