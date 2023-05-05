@@ -6,11 +6,15 @@ import time
 import tkinter as tk
 from PIL.ImageQt import ImageQt
 from tools.split_images import splitImage
+import tensorflow as tf
+import numpy as np
 
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         
+        self.piece_model = tf.keras.models.load_model('tools/piece_model')
+        self.color_model = tf.keras.models.load_model('tools/color_model')
         self.new_btn = QPushButton()
         self.save_btn = QPushButton()
         self.text_box = QTextEdit()
@@ -76,10 +80,59 @@ class MainWindow(QWidget):
         pieces_list[7][3]="Q"
         print(pieces_list)
         
-        # what is in image
         
-        #if(ispeice):
-            # what color is piece
+        
+        piece_names = ['bishop', 'king', 'knight', 'none', 'pawn', 'queen', 'rook']
+        color_names = ['black', 'white']
+        
+        # what is in image
+        for i in range(8):
+            for j in range(8):
+                
+                im = np.array(image_list[i][j].resize((80,80)))
+                img = im.reshape((1,80,80,3))
+                
+                pred_piece = self.piece_model.predict(img)
+                score_p = tf.nn.softmax(pred_piece[0])
+                piece = piece_names[np.argmax(score_p)]
+                if(piece=='none'):
+                    pieces_list[i][j]=0
+                else:
+                    
+                    pred_color = self.color_model.predict(img)
+                    score_c = tf.nn.softmax(pred_color[0])
+                    color = color_names[np.argmax(score_c)]
+                    
+                    if(piece=='king'):
+                        if(color=='black'):
+                            pieces_list[i][j]='k'
+                        else:
+                            pieces_list[i][j]='K'
+                    elif(piece=='queen'):
+                        if(color=='black'):
+                            pieces_list[i][j]='q'
+                        else:
+                            pieces_list[i][j]='Q'
+                    elif(piece=='bishop'):
+                        if(color=='black'):
+                            pieces_list[i][j]='b'
+                        else:
+                            pieces_list[i][j]='B'
+                    elif(piece=='rook'):
+                        if(color=='black'):
+                            pieces_list[i][j]='r'
+                        else:
+                            pieces_list[i][j]='R'
+                    elif(piece=='pawn'):
+                        if(color=='black'):
+                            pieces_list[i][j]='p'
+                        else:
+                            pieces_list[i][j]='P'
+                    elif(piece=='knight'):
+                        if(color=='black'):
+                            pieces_list[i][j]='n'
+                        else:
+                            pieces_list[i][j]='N'
         
         
         #set text_box

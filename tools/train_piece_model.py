@@ -36,6 +36,8 @@ val_ds = tf.keras.utils.image_dataset_from_directory(
 class_names = train_ds.class_names
 print(class_names)
 
+
+
 '''
 plt.figure(figsize=(10, 10))
 for images, labels in train_ds.take(1):
@@ -54,7 +56,8 @@ for image_batch, labels_batch in train_ds:
 num_classes = len(class_names)
 
 model = Sequential([
-    layers.Rescaling(1./255, input_shape=(img_height, img_width, 3)),
+    layers.Input(shape=(img_height, img_width, 3)),
+    layers.Rescaling(1./255),
     layers.Conv2D(16, 3, padding='same', activation='relu'),
     layers.MaxPooling2D(),
     layers.Conv2D(32, 3, padding='same', activation='relu'),
@@ -71,10 +74,10 @@ model.compile(optimizer='adam',loss=tf.keras.losses.SparseCategoricalCrossentrop
 
 # podgląd modelu
 model.summary()
-plot_model(model)
+plot_model(model, show_shapes=True)
 
 # trening
-epochs = 15
+epochs = 5
 history = model.fit(train_ds,validation_data=val_ds, epochs=epochs)
 
 # wizualizacja
@@ -97,6 +100,28 @@ plt.title('Training and Validation Loss')
 plt.show()
 
 model.save('piece_model', save_format='tf')
+
+
+
+for images, labels in val_ds.take(1):
+    for i in range(9):
+        ax = plt.subplot(3, 3, i + 1)
+        plt.imshow(images[i].numpy().astype("uint8"))
+        plt.title(class_names[labels[i]])
+        plt.axis("off")
+        
+    #print(images[0].numpy().astype("uint8").size)
+    #pred = model.predict(images[0].numpy())
+    #print(images)
+    #print(images[0])
+    im = np.reshape(images[2].numpy(), (1,80,80,3))
+    print(im.shape[0:])
+    pred = model.predict(im)
+    score = tf.nn.softmax(pred[0])
+    print(class_names[np.argmax(score)], 100 * np.max(score))
+    #print(images[0].numpy().astype("uint8"))
+    #print(images[0].numpy().astype("uint8").size)
+        
 
 #new_model = tf.keras.models.load_model('saved_model/my_model')
 
