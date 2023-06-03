@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QWidget, QPushButton, QTextEdit, QApplication, QLabel
-from PySide6.QtCore import QPoint, Qt, QRectF
+from PySide6.QtCore import QPoint, Qt, QRectF, QThread, Signal, Slot
 from PySide6 import QtGui
 from PIL import ImageGrab
 import time
@@ -8,73 +8,26 @@ from PIL.ImageQt import ImageQt
 from tools.split_images import splitImage
 import tensorflow as tf
 import numpy as np
+from threading import Thread
 
-class MainWindow(QWidget):
-    def __init__(self):
-        super().__init__()
+class ThreadReadImage(QThread):
+    
+    signal = Signal(str)
+    
+    def __init__(self,parent,image,piece_model,color_model):
+         self.image = image
+         self.piece_model = piece_model
+         self.color_model = color_model
+         
+         super(ThreadReadImage,self).__init__(parent)
         
-        self.piece_model = tf.keras.models.load_model('tools/piece_model')
-        self.color_model = tf.keras.models.load_model('tools/color_model')
-        self.new_btn = QPushButton()
-        self.save_btn = QPushButton()
-        self.text_box = QTextEdit()
-        self.screanshot = None
-        self.snipping_window = None
-        
-        self.setup()
-        
-    def setup(self):
-        
-        self.new_btn = QPushButton("New", self)
-        self.new_btn.move(10,10)
-        
-        self.save_btn = QPushButton("Save", self)
-        self.save_btn.move(90,10)
-        
-        self.open_btn = QPushButton("Open", self)
-        self.open_btn.move(170,10)
-        
-        self.image = QLabel(self)
-        self.image.setFixedWidth(280)
-        self.image.setFixedHeight(280)
-        self.image.move(10,40)
-        
-        self.text_box = QTextEdit(self)
-        self.text_box.setMaximumHeight(150)
-        self.text_box.setMinimumWidth(280)
-        self.text_box.move(10,330)
-        
-        self.new_btn.clicked.connect(self.newClicked)
-        self.save_btn.clicked.connect(self.saveClicked)
-        self.open_btn.clicked.connect(self.openClicked)
-        
-        self.setFixedSize(300,40)
-        self.setWindowTitle("Chess position reader")
-        self.move(100,100)
-        
-        self.show()
-        
-    def newClicked(self):
-        self.hide()
-        time.sleep(0.2)
-        self.snipping_window = SnippingWindow(self)
-        
-        
-    def saveClicked(self):
-        self.screanshot.show()
-        self.text_box.setText("save")
-        
-    def openClicked(self):
-        self.screanshot.show()
-        self.text_box.setText("open")
-
-    def readImage(self):
-        
+    def run(self):
+        print("read image")
         
         pieces_list = [[0] * 8 for i in range(8)]
         
         # split Image
-        image_list = splitImage(self.screanshot, 8, 8)
+        image_list = splitImage(self.image, 8, 8)
         #image_list[7][3].show()
         
         pieces_list[7][3]="Q"
@@ -135,10 +88,10 @@ class MainWindow(QWidget):
                             pieces_list[i][j]='N'
         
         
-        #set text_box
         fen = self.encodeToFEN(pieces_list)
-        self.text_box.setText(fen)
-    
+        
+        self.signal.emit(fen)
+        
     def encodeToFEN(self, table):
         text = ""
         for row in table:    
@@ -156,6 +109,87 @@ class MainWindow(QWidget):
             text+="/"
         text=text[:-1]+" w - - 0 1"
         return text
+
+class MainWindow(QWidget):
+    
+    screanshot_is_set = Signal()
+    
+    def __init__(self):
+        super().__init__()
+        
+        self.piece_model = tf.keras.models.load_model('tools/piece_model')
+        self.color_model = tf.keras.models.load_model('tools/color_model')
+        self.new_btn = QPushButton()
+        self.save_btn = QPushButton()
+        self.text_box = QTextEdit()
+        self.screanshot = None
+        self.snipping_window = None
+        
+        
+        self.setup()
+        
+    def setup(self):
+        
+        self.new_btn = QPushButton("New", self)
+        self.new_btn.move(10,10)
+        
+        self.save_btn = QPushButton("Save", self)
+        self.save_btn.move(90,10)
+        
+        self.open_btn = QPushButton("Open", self)
+        self.open_btn.move(170,10)
+        
+        self.image = QLabel(self)
+        self.image.setFixedWidth(280)
+        self.image.setFixedHeight(280)
+        self.image.move(10,40)
+        
+        self.text_box = QTextEdit(self)
+        self.text_box.setMaximumHeight(150)
+        self.text_box.setMinimumWidth(280)
+        self.text_box.move(10,330)
+        
+        self.new_btn.clicked.connect(self.newClicked)
+        self.save_btn.clicked.connect(self.saveClicked)
+        self.open_btn.clicked.connect(self.openClicked)
+        self.screanshot_is_set.connect(self.readImage)
+        
+        self.setFixedSize(300,40)
+        self.setWindowTitle("Chess position reader")
+        self.move(100,100)
+        
+        self.show()
+        
+    def newClicked(self):
+        self.hide()
+        time.sleep(0.2)
+        self.snipping_window = SnippingWindow(self)
+        
+        
+    def saveClicked(self):
+        #self.screanshot.show()
+        self.text_box.setText("save")
+        self.readImage()
+        
+    def openClicked(self):
+        self.screanshot.show()
+        self.text_box.setText("open")
+        self.readImage()
+
+    def readImage(self):
+        
+        
+        self.text_box.setText("in progres")
+        self.t = ThreadReadImage(self,self.screanshot,self.piece_model,self.color_model)
+        self.t.signal.connect(self.setTextBox)
+        self.t.start()
+        
+    
+    def setTextBox(self,text):
+        
+        self.text_box.setText(text)
+        
+    
 
 class SnippingWindow(QWidget):
     def __init__(self, parent=None):
@@ -180,8 +214,9 @@ class SnippingWindow(QWidget):
         self.setWindowOpacity(0.3)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowTitle(" ")
-        
         QApplication.setOverrideCursor(QtGui.QCursor(Qt.CrossCursor))
+    
+        
         
     def paintEvent(self, event):
         brush_color = (0, 0, 0, 255)
@@ -194,15 +229,18 @@ class SnippingWindow(QWidget):
         qp.drawRect(rect)
     
     def mousePressEvent(self, event):
+        print("PressEvent")
         self.begin = event.pos()
         self.end = self.begin
         self.update()
 
     def mouseMoveEvent(self, event):
+        print("MoveEvent")
         self.end = event.pos()
         self.update()
 
     def mouseReleaseEvent(self, event):
+        print("ReleaseEvent")
         root = tk.Tk()
         screen_width = root.winfo_screenwidth()
         screen_height = root.winfo_screenheight()
@@ -217,10 +255,14 @@ class SnippingWindow(QWidget):
         
         qim = ImageQt(self.parent.screanshot.resize((280, 280)))
         pix = QtGui.QPixmap.fromImage(qim)
+        
         self.parent.image.setPixmap(pix)
         self.parent.setFixedSize(300,490)
-        
         self.parent.move(100,100)
-        self.parent.readImage()
+        
+        self.hide()
         self.parent.show()
+
+        self.parent.screanshot_is_set.emit()
+        
         self.close()
