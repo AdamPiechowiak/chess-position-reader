@@ -168,9 +168,14 @@ class MainWindow(QWidget):
         
         
     def saveClicked(self):
-        #self.screanshot.show()
-        self.text_box.setText("save")
-        self.readImage()
+        
+        filepath = tk.filedialog.asksaveasfilename(
+            title='Save as...',
+            filetypes=[('Image files', '*.png')],
+            defaultextension='.png'
+        )
+        
+        self.screanshot.save(filepath)
         
     def openClicked(self):
         
