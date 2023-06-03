@@ -1,14 +1,17 @@
 from PySide6.QtWidgets import QWidget, QPushButton, QTextEdit, QApplication, QLabel
-from PySide6.QtCore import QPoint, Qt, QRectF, QThread, Signal, Slot
+from PySide6.QtCore import QPoint, Qt, QRectF, QThread, Signal
 from PySide6 import QtGui
 from PIL import ImageGrab
 import time
 import tkinter as tk
+from tkinter import filedialog
 from PIL.ImageQt import ImageQt
 from tools.split_images import splitImage
 import tensorflow as tf
 import numpy as np
-from threading import Thread
+from PIL import Image
+
+
 
 class ThreadReadImage(QThread):
     
@@ -22,16 +25,11 @@ class ThreadReadImage(QThread):
          super(ThreadReadImage,self).__init__(parent)
         
     def run(self):
-        print("read image")
         
         pieces_list = [[0] * 8 for i in range(8)]
         
         # split Image
         image_list = splitImage(self.image, 8, 8)
-        #image_list[7][3].show()
-        
-        pieces_list[7][3]="Q"
-        print(pieces_list)
         
         
         
@@ -133,11 +131,13 @@ class MainWindow(QWidget):
         self.new_btn = QPushButton("New", self)
         self.new_btn.move(10,10)
         
-        self.save_btn = QPushButton("Save", self)
-        self.save_btn.move(90,10)
-        
         self.open_btn = QPushButton("Open", self)
-        self.open_btn.move(170,10)
+        self.open_btn.move(90,10)
+        
+        self.save_btn = QPushButton("Save", self)
+        self.save_btn.move(170,10)
+        self.save_btn.hide()
+        
         
         self.image = QLabel(self)
         self.image.setFixedWidth(280)
@@ -164,6 +164,7 @@ class MainWindow(QWidget):
         self.hide()
         time.sleep(0.2)
         self.snipping_window = SnippingWindow(self)
+        self.save_btn.show()
         
         
     def saveClicked(self):
@@ -172,9 +173,21 @@ class MainWindow(QWidget):
         self.readImage()
         
     def openClicked(self):
-        self.screanshot.show()
-        self.text_box.setText("open")
-        self.readImage()
+        
+        filepath = tk.filedialog.askopenfilename(
+            title='Select a file...',
+            filetypes=[('Image files', '*.png')]
+            )   
+        
+        self.screanshot = Image.open(filepath).convert('RGB')
+        
+        qim = ImageQt(self.screanshot.resize((280, 280)))
+        pix = QtGui.QPixmap.fromImage(qim)
+        
+        self.image.setPixmap(pix)
+        self.setFixedSize(300,490)
+        self.save_btn.show()
+        self.screanshot_is_set.emit()
 
     def readImage(self):
         
@@ -229,18 +242,15 @@ class SnippingWindow(QWidget):
         qp.drawRect(rect)
     
     def mousePressEvent(self, event):
-        print("PressEvent")
         self.begin = event.pos()
         self.end = self.begin
         self.update()
 
     def mouseMoveEvent(self, event):
-        print("MoveEvent")
         self.end = event.pos()
         self.update()
 
     def mouseReleaseEvent(self, event):
-        print("ReleaseEvent")
         root = tk.Tk()
         screen_width = root.winfo_screenwidth()
         screen_height = root.winfo_screenheight()
